@@ -52,52 +52,57 @@ class instruction {
 class dial {
   public:
     int pos;
+    int count;
+    int zeroed;
 
-    dial() { pos = INITIAL_DIAL_POS; }
+    dial() {
+        pos    = INITIAL_DIAL_POS;
+        zeroed = 0;
+        count  = 0;
+    }
 
-    int rotate(instruction inst) {
+    void rotate(instruction inst) {
         if (inst.dir == left) {
             rotate_left(inst.dist);
         } else if (inst.dir == right) {
             rotate_right(inst.dist);
         }
 
-        return pos;
+        if (pos == 0) {
+            count += 1;
+        }
     }
 
   private:
     void rotate_left(const int dist) {
-        int dist_cpy = dist;
-        while (dist_cpy > 0) {
-            int diff = pos - dist_cpy;
-            if (diff < 0) {
-                diff     = std::abs(diff) - 1;
-                pos      = DIAL_MAX;
-                dist_cpy = diff;
-            } else {
-                pos      -= dist_cpy;
-                dist_cpy  = 0;
+        for (int i = 0; i < dist; i++) {
+            pos--;
+            if (pos == 0) {
+                zeroed++;
+            }
+            if (pos < 0) {
+                pos = DIAL_MAX;
             }
         }
     }
 
     void rotate_right(const int dist) {
-        int dist_cpy = dist;
-        while (dist_cpy > 0) {
-            int diff = pos + dist_cpy;
-            if (diff > DIAL_MAX) {
-                diff     = diff - DIAL_MAX;
-                pos      = 0;
-                dist_cpy = diff - 1;
-            } else {
-                pos      += dist_cpy;
-                dist_cpy  = 0;
+        for (int i = 0; i < dist; i++) {
+            pos++;
+            if (pos > DIAL_MAX) {
+                pos = 0;
+                zeroed++;
             }
         }
     }
 };
 
 int main(void) {
+    // const std::string        test_input = "R1000";
+    // const std::string test_input =
+    //     "L68\nL30\nR48\nL5\nR60\nL55\nL1\nL99\nR14\nL82";
+    // std::vector<std::string> lines = split_lines(test_input);
+
     std::ifstream     reader("input");
     std::stringstream sbuff;
     sbuff << reader.rdbuf();
@@ -111,16 +116,14 @@ int main(void) {
     }
 
     dial d;
-    int  ctr = 0;
-
     for (const instruction i : instructions) {
-        int res = d.rotate(i);
-        if (res == 0) {
-            ctr += 1;
-        }
+        d.rotate(i);
     }
 
-    printf("res: %d\n", ctr);
+    // part 1
+    printf("res (part 1): %d\n", d.count);
 
+    // part 2
+    printf("res (part 2): %d\n", d.zeroed);
     return 0;
 }
